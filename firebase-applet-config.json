@@ -1,12 +1,10 @@
 {
-  "projectId": "integrated-aura-xln7n",
-  "appId": "1:1068699132863:web:ae01c03c334ea9a2c4370a",
-  "apiKey": "AIzaSyBWiYanMFJMv7VQchj60yc08BwXU5voH0k",
-  "authDomain": "integrated-aura-xln7n.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-vncawey-9db8fe5e-d3ed-4d4b-8606-f541b4065767",
-  "storageBucket": "integrated-aura-xln7n.firebasestorage.app",
-  "messagingSenderId": "1068699132863",
-  "measurementId": "",
-  "oAuthClientId": "1068699132863-vm633buptke45p8oa91bee5916t8s4j8.apps.googleusercontent.com",
-  "recaptchaSiteKey": ""
+  "projectId": "wey-manager",
+  "appId": "1:806242262119:web:733186edafd0ded05708c2",
+  "apiKey": "AIzaSyAFG0SR-XbD7z63V1djI4WI-_0HmiDZA3g",
+  "authDomain": "wey-manager.firebaseapp.com",
+  "databaseURL": "https://wey-manager-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "storageBucket": "wey-manager.firebasestorage.app",
+  "messagingSenderId": "806242262119",
+  "measurementId": "G-1X31XNEXRL"
 }

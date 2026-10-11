@@ -1,79 +1,56 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
+// src/services/firebase.ts
+import { initializeApp } from "firebase/app";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signOut, 
+  onAuthStateChanged, 
+  User 
+} from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 
+// Cấu hình Firebase từ thông tin project wey-manager của bạn
+const firebaseConfig = {
+  apiKey: "AIzaSyAFG0SR-XbD7z63V1djI4WI-_0HmiDZA3g",
+  authDomain: "wey-manager.firebaseapp.com",
+  databaseURL: "https://wey-manager-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "wey-manager",
+  storageBucket: "wey-manager.firebasestorage.app",
+  messagingSenderId: "806242262119",
+  appId: "1:806242262119:web:733186edafd0ded05708c2",
+  measurementId: "G-1X31XNEXRL"
+};
+
+// Khởi tạo Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+export const db = getFirestore(app);
+export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
-export enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-export interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-    emailVerified?: boolean | null;
-    isAnonymous?: boolean | null;
-    tenantId?: string | null;
-    providerInfo?: {
-      providerId?: string | null;
-      email?: string | null;
-    }[];
-  };
-}
-
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData?.map(provider => ({
-        providerId: provider.providerId,
-        email: provider.email,
-      })) || [],
-    },
-    operationType,
-    path,
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
-
-export async function testConnection(): Promise<boolean> {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    return true;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Firebase client is offline or network is limited.');
-    }
-    return false;
-  }
-}
-
-export async function loginWithGoogle(): Promise<User> {
+// Đăng nhập Google Popup
+const googleProvider = new GoogleAuthProvider();
+export const loginWithGoogle = async (): Promise<User> => {
   const result = await signInWithPopup(auth, googleProvider);
   return result.user;
-}
+};
 
-export async function logout(): Promise<void> {
-  await fbSignOut(auth);
-}
+// Đăng xuất
+export const logout = async (): Promise<void> => {
+  await signOut(auth);
+};
 
+// Xuất bộ lắng nghe trạng thái đăng nhập
 export { onAuthStateChanged };
+
+// Kiểm tra kết nối
+export const testConnection = async (): Promise<boolean> => {
+  try {
+    console.log("Firebase Firestore đã kết nối thành công với Project:", firebaseConfig.projectId);
+    return true;
+  } catch (error) {
+    console.error("Lỗi kết nối Firebase:", error);
+    return false;
+  }
+};
