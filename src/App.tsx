@@ -1,4 +1,3 @@
-// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import {
@@ -62,10 +61,10 @@ import { ImportWizardModal } from './components/import/ImportWizardModal';
 import { WifiOff } from 'lucide-react';
 
 const DEFAULT_PROFILE = (user?: User | null): UserProfileData => ({
-  uid: user?.uid || 'guest_teacher',
-  email: user?.email || 'teacher@vuoncuawey.edu.vn',
-  displayName: user?.displayName || 'Thầy/Cô Wey',
-  photoURL: user?.photoURL || undefined,
+  uid: user?.uid || 'hoangbang1310_teacher',
+  email: user?.email || 'hoangbang1310@gmail.com',
+  displayName: user?.displayName || 'Thầy Hoàng Bằng',
+  photoURL: user?.photoURL || '',
   currentSchoolYear: '2026–2027',
   customGatePassword: '',
   externalLinks: {
@@ -84,8 +83,8 @@ const DEFAULT_PROFILE = (user?: User | null): UserProfileData => ({
 function MainApp() {
   const { showToast } = useToast();
 
-  // Navigation states - Mặc định là false để hiển thị Landing Page (Cổng Vườn) trước
-  const [inGarden, setInGarden] = useState(false);
+  // Navigation states
+  const [inGarden, setInGarden] = useState(true);
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'classes' | 'class-detail' | 'timetable' | 'settings'>('dashboard');
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
@@ -137,17 +136,30 @@ function MainApp() {
       setIsAuthLoading(false);
 
       if (user) {
-        // Giữ nguyên ở Landing Page, không tự động bật inGarden(true) nữa
+        setInGarden(true);
+        // Load user profile
         let userProfile = await getUserProfile(user.uid);
         if (!userProfile) {
           userProfile = DEFAULT_PROFILE(user);
+          await saveUserProfile(userProfile);
+        } else if (!userProfile.email || userProfile.email === 'teacher@vuoncuawey.edu.vn') {
+          userProfile.email = user.email || 'hoangbang1310@gmail.com';
+          userProfile.displayName = user.displayName || userProfile.displayName || 'Thầy Hoàng Bằng';
           await saveUserProfile(userProfile);
         }
         setProfile(userProfile);
         await loadUserData(user.uid);
       } else {
         // Fallback for demo or guest mode before login
-        const guestProfile = DEFAULT_PROFILE(null);
+        let guestProfile = await getUserProfile('hoangbang1310_teacher');
+        if (!guestProfile) {
+          guestProfile = DEFAULT_PROFILE(null);
+          await saveUserProfile(guestProfile);
+        } else if (!guestProfile.email || guestProfile.email === 'teacher@vuoncuawey.edu.vn') {
+          guestProfile.email = 'hoangbang1310@gmail.com';
+          guestProfile.displayName = 'Thầy Hoàng Bằng';
+          await saveUserProfile(guestProfile);
+        }
         setProfile(guestProfile);
         await loadUserData(guestProfile.uid);
       }
@@ -169,6 +181,11 @@ function MainApp() {
     } catch (err) {
       console.error('Error loading data:', err);
     }
+  };
+
+  const handleRefreshData = async () => {
+    const uid = currentUser?.uid || profile.uid;
+    await loadUserData(uid);
   };
 
   const handleImport19Classes = async () => {
@@ -207,6 +224,7 @@ function MainApp() {
       showToast(`Xin chào ${user.displayName || user.email}!`, 'success');
     } catch (err: any) {
       console.warn('Google login popup cancelled or error:', err);
+      // Still allow entering garden with local state
       setInGarden(true);
     }
   };
@@ -306,6 +324,7 @@ function MainApp() {
       const list = await getStudents(uid, selectedClassId);
       setClassStudents(list);
 
+      // Update student count in class
       const target = classes.find(c => c.id === selectedClassId);
       if (target) {
         const updated = { ...target, studentCount: list.length };
@@ -323,6 +342,7 @@ function MainApp() {
     const list = await getStudents(uid, selectedClassId);
     setClassStudents(list);
 
+    // Update student count in class
     const target = classes.find(c => c.id === selectedClassId);
     if (target) {
       const updated = { ...target, studentCount: list.length };
@@ -340,6 +360,7 @@ function MainApp() {
       return;
     }
 
+    // Ensure all imported student records have the target classId and userId
     const sanitizedStudents = newStudents.map(s => ({
       ...s,
       classId: effectiveClassId,
@@ -348,11 +369,13 @@ function MainApp() {
 
     await batchSaveStudents(uid, effectiveClassId, sanitizedStudents);
 
+    // If currently viewing this class, reload student roster
     if (selectedClassId === effectiveClassId) {
       const list = await getStudents(uid, effectiveClassId);
       setClassStudents(list);
     }
 
+    // Update student count in class
     const target = classes.find(c => c.id === effectiveClassId);
     if (target) {
       const allClassStudents = await getStudents(uid, effectiveClassId);
@@ -377,7 +400,7 @@ function MainApp() {
     });
   };
 
-  // Student Point Actions
+  // Student Point Actions (Bonus & Penalty points)
   const handleSavePointRecord = async (record: StudentPointRecord) => {
     await savePointRecord(record);
     setClassPoints(prev => {
@@ -451,6 +474,7 @@ function MainApp() {
 
   const handleBatchSaveTimetable = async (newItems: TimetableItem[]) => {
     const uid = currentUser?.uid || profile.uid;
+    // Merge new items into existing timetable to prevent wiping out other sessions
     const mergedMap = new Map<string, TimetableItem>();
     timetable.forEach(t => {
       const sess = t.session || 'morning';
@@ -493,7 +517,7 @@ function MainApp() {
 
   const currentSelectedClass = classes.find(c => c.id === selectedClassId);
 
-  // If not in garden, show Landing Page (Trang Cổng Vườn)
+  // If not in garden, show Landing Page (Trang 1)
   if (!inGarden) {
     return (
       <LandingPage
@@ -517,9 +541,11 @@ function MainApp() {
         backgroundAttachment: 'fixed',
       }}
     >
+      {/* Soft Matcha Garden backdrop veil ensures 100% contrast & clarity for all cards and text */}
       <div className="fixed inset-0 bg-[#fbf9f5]/85 pointer-events-none z-0" />
       <BotanicalLeaves leaf1Url={profile.assets?.leaf1} leaf2Url={profile.assets?.leaf2} />
 
+      {/* Offline banner */}
       {!isOnline && (
         <div className="no-print bg-amber-500 text-white text-xs py-1.5 px-4 text-center flex items-center justify-center gap-2 z-50">
           <WifiOff className="w-3.5 h-3.5" />
@@ -527,6 +553,7 @@ function MainApp() {
         </div>
       )}
 
+      {/* Navigation */}
       <GardenNavbar
         currentTab={currentTab === 'class-detail' ? 'classes' : currentTab}
         onSelectTab={tab => {
@@ -545,13 +572,18 @@ function MainApp() {
         }}
       />
 
+      {/* Main Content Viewport */}
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-5 lg:px-8 py-3.5 sm:py-6">
+        {/* TAB 1: DASHBOARD */}
         {currentTab === 'dashboard' && (
           <GardenDashboard
             classes={classes}
             timetable={timetable}
             currentSchoolYear={profile.currentSchoolYear}
             userId={currentUser?.uid || profile.uid}
+            userEmail={currentUser?.email || profile.email || 'hoangbang1310@gmail.com'}
+            onRefreshData={handleRefreshData}
+            onShowToast={showToast}
             onSelectClass={classId => {
               setSelectedClassId(classId);
               setCurrentTab('class-detail');
@@ -572,11 +604,16 @@ function MainApp() {
           />
         )}
 
+        {/* TAB 2: CLASSES LIST */}
         {currentTab === 'classes' && !selectedClassId && (
           <GardenDashboard
             classes={classes}
             timetable={timetable}
             currentSchoolYear={profile.currentSchoolYear}
+            userId={currentUser?.uid || profile.uid}
+            userEmail={currentUser?.email || profile.email || 'hoangbang1310@gmail.com'}
+            onRefreshData={handleRefreshData}
+            onShowToast={showToast}
             onSelectClass={classId => {
               setSelectedClassId(classId);
               setCurrentTab('class-detail');
@@ -597,6 +634,7 @@ function MainApp() {
           />
         )}
 
+        {/* TAB 3: CLASS DETAIL */}
         {currentTab === 'class-detail' && currentSelectedClass && (
           <ClassDetail
             classData={currentSelectedClass}
@@ -627,6 +665,7 @@ function MainApp() {
           />
         )}
 
+        {/* TAB 4: TEACHER TIMETABLE */}
         {currentTab === 'timetable' && (
           <TeacherTimetable
             timetable={timetable}
@@ -638,6 +677,7 @@ function MainApp() {
           />
         )}
 
+        {/* TAB 5: SETTINGS */}
         {currentTab === 'settings' && (
           <SettingsPage
             profile={profile}
@@ -649,6 +689,7 @@ function MainApp() {
         )}
       </main>
 
+      {/* Create / Edit Class Modal */}
       <CreateClassModal
         isOpen={isCreateClassModalOpen}
         onClose={() => {
@@ -661,6 +702,7 @@ function MainApp() {
         availableSubjects={profile.subjects}
       />
 
+      {/* Universal Import Wizard Modal */}
       <ImportWizardModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}

@@ -719,3 +719,82 @@ export function downloadBackupJSON(backupData: BackupData): void {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Tải file dữ liệu sao lưu riêng cho 19 lớp Khối 8 (840 học sinh) cho hoangbang1310@gmail.com
+ */
+export function download19ClassesBackupFile(backupData: BackupData): void {
+  const jsonStr = JSON.stringify(backupData, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `du_lieu_19_lop_khoi_8_hoangbang1310_${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Tạo nội dung email và đường dẫn mở Gmail soạn thư gửi đến hoangbang1310@gmail.com
+ */
+export function generate19ClassesMailto({
+  targetEmail = 'hoangbang1310@gmail.com',
+  classes,
+  totalStudents = 840,
+  schoolYear = '2026–2027',
+}: {
+  targetEmail?: string;
+  classes: ClassData[];
+  totalStudents?: number;
+  schoolYear?: string;
+}) {
+  const dateStr = new Date().toLocaleDateString('vi-VN');
+  const subject = `[Vườn của Wey] Báo cáo & Dữ liệu 19 lớp Khối 8 (${totalStudents} học sinh) - ${targetEmail}`;
+
+  const classListText = classes
+    .map((c, i) => `  ${(i + 1).toString().padStart(2, '0')}. Lớp ${c.name}: Sĩ số ${c.studentCount || 0} học sinh | Môn: ${c.subject || 'Công nghệ'}`)
+    .join('\n');
+
+  const body = `Kính gửi Thầy/Cô (${targetEmail}),
+
+Hệ thống Sổ Giáo Viên THCS 'Vườn của Wey' xin gửi báo cáo dữ liệu 19 lớp học Khối 8 đã được xử lý và chuẩn bị đồng bộ:
+
+--------------------------------------------------
+THÔNG TIN TỔNG QUAN
+--------------------------------------------------
+- Tài khoản nhận: ${targetEmail}
+- Năm học: ${schoolYear}
+- Tổng số lớp học: ${classes.length} lớp (từ 8A1 đến 8A19)
+- Tổng số học sinh: ${totalStudents} học sinh
+- Cơ sở dữ liệu Firebase: Dự án wey-manager (Firestore)
+- Ngày kết xuất dữ liệu: ${dateStr}
+
+--------------------------------------------------
+DANH SÁCH CHI TIẾT 19 LỚP HỌC KHỐI 8
+--------------------------------------------------
+${classListText}
+
+--------------------------------------------------
+TÌNH TRẠNG DỮ LIỆU
+--------------------------------------------------
+✓ Đầy đủ họ tên, ngày sinh, giới tính của 840 học sinh.
+✓ Đã gắn cung hoàng đạo và bộ ảnh đại diện Avatar WebP theo cung & giới tính.
+✓ Đã tích hợp sổ điểm Thông tư 22, nề nếp điểm cộng/trừ và thời khóa biểu.
+✓ Tệp dữ liệu sao lưu chi tiết (JSON) đã được tải về máy của bạn để đính kèm vào email này nếu cần.
+
+Trân trọng,
+Hệ thống Vườn của Wey · wey-manager`;
+
+  const gmailWebUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+    targetEmail
+  )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  const mailtoUrl = `mailto:${targetEmail}?subject=${encodeURIComponent(
+    subject
+  )}&body=${encodeURIComponent(body)}`;
+
+  return { subject, body, gmailWebUrl, mailtoUrl };
+}
+

@@ -4,6 +4,7 @@
   "apiKey": "AIzaSyAFG0SR-XbD7z63V1djI4WI-_0HmiDZA3g",
   "authDomain": "wey-manager.firebaseapp.com",
   "databaseURL": "https://wey-manager-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "firestoreDatabaseId": "(default)",
   "storageBucket": "wey-manager.firebasestorage.app",
   "messagingSenderId": "806242262119",
   "measurementId": "G-1X31XNEXRL"

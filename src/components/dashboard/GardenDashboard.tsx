@@ -23,6 +23,7 @@ import { GardenButton } from '../common/GardenButton';
 import { GardenCalendar } from './GardenCalendar';
 import { ClassesOverviewTable } from './ClassesOverviewTable';
 import { GardenBirthdayNoticeWidget } from './GardenBirthdayNoticeWidget';
+import { EmailDataSyncCard } from './EmailDataSyncCard';
 import { WeySticker } from '../../utils/weyStickers';
 
 interface GardenDashboardProps {
@@ -30,6 +31,9 @@ interface GardenDashboardProps {
   timetable: ReadonlyArray<TimetableItem>;
   currentSchoolYear: string;
   userId?: string;
+  userEmail?: string;
+  onRefreshData?: () => Promise<void>;
+  onShowToast?: (message: string, type: 'success' | 'error' | 'info') => void;
   onSelectClass: (classId: string) => void;
   onCreateClass: () => void;
   onImportClass: () => void;
@@ -44,7 +48,10 @@ export const GardenDashboard: React.FC<GardenDashboardProps> = ({
   classes,
   timetable,
   currentSchoolYear,
-  userId = 'guest_teacher',
+  userId = 'hoangbang1310_teacher',
+  userEmail = 'hoangbang1310@gmail.com',
+  onRefreshData,
+  onShowToast,
   onSelectClass,
   onCreateClass,
   onImportClass,
@@ -183,6 +190,16 @@ export const GardenDashboard: React.FC<GardenDashboardProps> = ({
           </p>
         </GardenCard>
       </div>
+
+      {/* Widget Đẩy & Đồng bộ dữ liệu 19 lớp qua Gmail: hoangbang1310@gmail.com */}
+      <EmailDataSyncCard
+        classes={yearClasses.length > 0 ? yearClasses : (classes as ClassData[])}
+        userId={userId}
+        userEmail={userEmail}
+        schoolYear={currentSchoolYear}
+        onRefreshData={onRefreshData}
+        onShowToast={onShowToast}
+      />
 
       {/* Widget Thông báo từ khu vườn: Sinh nhật học sinh trong tuần */}
       <GardenBirthdayNoticeWidget

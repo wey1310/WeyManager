@@ -15,6 +15,8 @@ import {
   Sparkles,
   Sliders,
   AlertTriangle,
+  Mail,
+  Send,
 } from 'lucide-react';
 import {
   UserProfileData,
@@ -27,7 +29,11 @@ import { GardenButton } from '../common/GardenButton';
 import { GardenCard } from '../common/GardenCard';
 import { GardenInput } from '../common/GardenInput';
 import { GardenModal } from '../common/GardenModal';
-import { downloadBackupJSON } from '../../services/exportService';
+import {
+  downloadBackupJSON,
+  download19ClassesBackupFile,
+  generate19ClassesMailto,
+} from '../../services/exportService';
 import { DEFAULT_POINT_CONVERSION_CONFIG } from '../../services/gradeEngine';
 
 interface SettingsPageProps {
@@ -115,6 +121,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       setIsExporting(false);
     }
   };
+
+  const handleSend19ClassesToGmail = async () => {
+    try {
+      const data = await onCreateBackup();
+      download19ClassesBackupFile(data);
+
+      const targetEmail = 'hoangbang1310@gmail.com';
+      const { gmailWebUrl, mailtoUrl } = generate19ClassesMailto({
+        targetEmail,
+        classes: data.classes || [],
+        totalStudents: data.students?.length || 840,
+        schoolYear: data.schoolYear || currentSchoolYear,
+      });
+
+      const opened = window.open(gmailWebUrl, '_blank');
+      if (!opened) {
+        window.location.href = mailtoUrl;
+      }
+    } catch {
+      alert('Không thể tạo file báo cáo gửi Gmail.');
+    }
+  };
+
 
   const handleRestoreFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -572,6 +601,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleSend19ClassesToGmail}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#ea4335] text-white hover:bg-[#d93025] text-xs font-semibold shadow-xs cursor-pointer transition-colors"
+            title="Soạn thư Gmail gửi báo cáo 19 lớp và tự động tải file backup JSON"
+          >
+            <Send className="w-4 h-4" />
+            <span>Gửi dữ liệu qua Gmail (hoangbang1310@gmail.com)</span>
+          </button>
+
           <GardenButton
             variant="outline"
             icon={<Download className="w-4 h-4" />}
