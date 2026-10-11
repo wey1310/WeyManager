@@ -1,3 +1,4 @@
+// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import {
@@ -83,8 +84,8 @@ const DEFAULT_PROFILE = (user?: User | null): UserProfileData => ({
 function MainApp() {
   const { showToast } = useToast();
 
-  // Navigation states
-  const [inGarden, setInGarden] = useState(true);
+  // Navigation states - Mặc định là false để hiển thị Landing Page (Cổng Vườn) trước
+  const [inGarden, setInGarden] = useState(false);
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'classes' | 'class-detail' | 'timetable' | 'settings'>('dashboard');
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
@@ -136,8 +137,7 @@ function MainApp() {
       setIsAuthLoading(false);
 
       if (user) {
-        setInGarden(true);
-        // Load user profile
+        // Giữ nguyên ở Landing Page, không tự động bật inGarden(true) nữa
         let userProfile = await getUserProfile(user.uid);
         if (!userProfile) {
           userProfile = DEFAULT_PROFILE(user);
@@ -207,7 +207,6 @@ function MainApp() {
       showToast(`Xin chào ${user.displayName || user.email}!`, 'success');
     } catch (err: any) {
       console.warn('Google login popup cancelled or error:', err);
-      // Still allow entering garden with local state
       setInGarden(true);
     }
   };
@@ -307,7 +306,6 @@ function MainApp() {
       const list = await getStudents(uid, selectedClassId);
       setClassStudents(list);
 
-      // Update student count in class
       const target = classes.find(c => c.id === selectedClassId);
       if (target) {
         const updated = { ...target, studentCount: list.length };
@@ -325,7 +323,6 @@ function MainApp() {
     const list = await getStudents(uid, selectedClassId);
     setClassStudents(list);
 
-    // Update student count in class
     const target = classes.find(c => c.id === selectedClassId);
     if (target) {
       const updated = { ...target, studentCount: list.length };
@@ -343,7 +340,6 @@ function MainApp() {
       return;
     }
 
-    // Ensure all imported student records have the target classId and userId
     const sanitizedStudents = newStudents.map(s => ({
       ...s,
       classId: effectiveClassId,
@@ -352,13 +348,11 @@ function MainApp() {
 
     await batchSaveStudents(uid, effectiveClassId, sanitizedStudents);
 
-    // If currently viewing this class, reload student roster
     if (selectedClassId === effectiveClassId) {
       const list = await getStudents(uid, effectiveClassId);
       setClassStudents(list);
     }
 
-    // Update student count in class
     const target = classes.find(c => c.id === effectiveClassId);
     if (target) {
       const allClassStudents = await getStudents(uid, effectiveClassId);
@@ -383,7 +377,7 @@ function MainApp() {
     });
   };
 
-  // Student Point Actions (Bonus & Penalty points)
+  // Student Point Actions
   const handleSavePointRecord = async (record: StudentPointRecord) => {
     await savePointRecord(record);
     setClassPoints(prev => {
@@ -457,7 +451,6 @@ function MainApp() {
 
   const handleBatchSaveTimetable = async (newItems: TimetableItem[]) => {
     const uid = currentUser?.uid || profile.uid;
-    // Merge new items into existing timetable to prevent wiping out other sessions
     const mergedMap = new Map<string, TimetableItem>();
     timetable.forEach(t => {
       const sess = t.session || 'morning';
@@ -500,7 +493,7 @@ function MainApp() {
 
   const currentSelectedClass = classes.find(c => c.id === selectedClassId);
 
-  // If not in garden, show Landing Page (Trang 1)
+  // If not in garden, show Landing Page (Trang Cổng Vườn)
   if (!inGarden) {
     return (
       <LandingPage
@@ -524,11 +517,9 @@ function MainApp() {
         backgroundAttachment: 'fixed',
       }}
     >
-      {/* Soft Matcha Garden backdrop veil ensures 100% contrast & clarity for all cards and text */}
       <div className="fixed inset-0 bg-[#fbf9f5]/85 pointer-events-none z-0" />
       <BotanicalLeaves leaf1Url={profile.assets?.leaf1} leaf2Url={profile.assets?.leaf2} />
 
-      {/* Offline banner */}
       {!isOnline && (
         <div className="no-print bg-amber-500 text-white text-xs py-1.5 px-4 text-center flex items-center justify-center gap-2 z-50">
           <WifiOff className="w-3.5 h-3.5" />
@@ -536,7 +527,6 @@ function MainApp() {
         </div>
       )}
 
-      {/* Navigation */}
       <GardenNavbar
         currentTab={currentTab === 'class-detail' ? 'classes' : currentTab}
         onSelectTab={tab => {
@@ -555,9 +545,7 @@ function MainApp() {
         }}
       />
 
-      {/* Main Content Viewport */}
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-5 lg:px-8 py-3.5 sm:py-6">
-        {/* TAB 1: DASHBOARD */}
         {currentTab === 'dashboard' && (
           <GardenDashboard
             classes={classes}
@@ -584,7 +572,6 @@ function MainApp() {
           />
         )}
 
-        {/* TAB 2: CLASSES LIST */}
         {currentTab === 'classes' && !selectedClassId && (
           <GardenDashboard
             classes={classes}
@@ -610,7 +597,6 @@ function MainApp() {
           />
         )}
 
-        {/* TAB 3: CLASS DETAIL */}
         {currentTab === 'class-detail' && currentSelectedClass && (
           <ClassDetail
             classData={currentSelectedClass}
@@ -641,7 +627,6 @@ function MainApp() {
           />
         )}
 
-        {/* TAB 4: TEACHER TIMETABLE */}
         {currentTab === 'timetable' && (
           <TeacherTimetable
             timetable={timetable}
@@ -653,7 +638,6 @@ function MainApp() {
           />
         )}
 
-        {/* TAB 5: SETTINGS */}
         {currentTab === 'settings' && (
           <SettingsPage
             profile={profile}
@@ -665,7 +649,6 @@ function MainApp() {
         )}
       </main>
 
-      {/* Create / Edit Class Modal */}
       <CreateClassModal
         isOpen={isCreateClassModalOpen}
         onClose={() => {
@@ -678,7 +661,6 @@ function MainApp() {
         availableSubjects={profile.subjects}
       />
 
-      {/* Universal Import Wizard Modal */}
       <ImportWizardModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
