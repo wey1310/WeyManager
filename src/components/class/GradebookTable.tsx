@@ -440,14 +440,22 @@ export const GradebookTable: React.FC<GradebookTableProps> = ({
           </thead>
 
           {/* Table Body */}
-          <tbody className="divide-y divide-[#e5f0e5]">
+          <tbody className="divide-y divide-[#D5E4D0]/60">
             {students.length === 0 ? (
               <tr>
                 <td
                   colSpan={activeColumns.length + (semester === 2 ? 6 : 4)}
-                  className="py-12 text-center text-[#5d905f]"
+                  className="py-14 text-center text-[#293D2C]"
                 >
-                  🌱 Lớp chưa có học sinh nào. Hãy chuyển qua tab <strong>Học sinh</strong> để thêm hoặc import.
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <WeySticker name="sleep" size={64} />
+                    <span className="font-bold font-garden text-sm text-[#293D2C]">
+                      🌱 Lớp chưa có học sinh nào trong sổ điểm
+                    </span>
+                    <span className="text-xs text-[#426F49]">
+                      Hãy chuyển qua tab <strong>Học sinh</strong> để thêm hoặc nạp danh sách từ file Excel / Word.
+                    </span>
+                  </div>
                 </td>
               </tr>
             ) : (

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { WeySticker, WeyStickerType } from '../../utils/weyStickers';
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -24,42 +25,54 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
+    }, 4200);
   }, []);
 
   const removeToast = (id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
+  const getStickerForToast = (type: ToastType): WeyStickerType => {
+    if (type === 'success') return 'happy';
+    if (type === 'error') return 'confused';
+    return 'hello';
+  };
+
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
-        {toasts.map(toast => (
-          <div
-            key={toast.id}
-            className={`pointer-events-auto flex items-center justify-between p-3.5 rounded-xl shadow-lg border text-sm animate-in slide-in-from-bottom-2 duration-200 ${
-              toast.type === 'success'
-                ? 'bg-[#f4f8f4] border-[#a7c8a7] text-[#293e2b]'
-                : toast.type === 'error'
-                ? 'bg-rose-50 border-rose-200 text-rose-900'
-                : 'bg-[#fbf8f0] border-[#ede0bf] text-[#4a3f2c]'
-            }`}
-          >
-            <div className="flex items-center gap-2.5">
-              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-[#467348] shrink-0" />}
-              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />}
-              {toast.type === 'info' && <Info className="w-5 h-5 text-[#9c8266] shrink-0" />}
-              <span className="font-medium">{toast.message}</span>
-            </div>
-            <button
-              onClick={() => removeToast(toast.id)}
-              className="text-neutral-400 hover:text-neutral-600 p-1 rounded-md cursor-pointer ml-2"
+      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">
+        {toasts.map(toast => {
+          const sticker = getStickerForToast(toast.type);
+          return (
+            <div
+              key={toast.id}
+              className={`pointer-events-auto flex items-center justify-between p-3 sm:p-3.5 rounded-2xl shadow-lg border text-xs sm:text-sm animate-in slide-in-from-bottom-3 duration-200 backdrop-blur-xs ${
+                toast.type === 'success'
+                  ? 'bg-[#FFFDF6] border-[#D5E4D0] text-[#293D2C]'
+                  : toast.type === 'error'
+                  ? 'bg-[#FFF5F5] border-rose-300 text-rose-900'
+                  : 'bg-[#F7FAF7] border-[#D5E4D0] text-[#293D2C]'
+              }`}
             >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="shrink-0">
+                  <WeySticker name={sticker} size={36} />
+                </div>
+                <div className="min-w-0">
+                  <span className="font-semibold leading-snug line-clamp-2">{toast.message}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => removeToast(toast.id)}
+                className="text-neutral-400 hover:text-neutral-700 p-1.5 rounded-lg hover:bg-black/5 cursor-pointer ml-2 shrink-0 transition-colors"
+                aria-label="Đóng thông báo"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </ToastContext.Provider>
   );

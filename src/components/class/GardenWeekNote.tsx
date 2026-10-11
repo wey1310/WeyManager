@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ClassData, WeeklyNoteData } from '../../types';
 import { GardenButton } from '../common/GardenButton';
+import { WeySticker } from '../../utils/weyStickers';
 
 interface GardenWeekNoteProps {
   classData: ClassData;
@@ -394,13 +395,24 @@ Ví dụ:
 - Nhắc lớp chuẩn bị đồ dùng thí nghiệm
 - *Lưu ý:* Kiểm tra bài cũ 3 học sinh đầu giờ
 - Tài liệu đính kèm: [Giáo án điện tử KHTN 6](https://drive.google.com)`}
-            className="w-full p-4 text-sm text-[#293e2b] placeholder-[#a7c8a7] leading-relaxed focus:outline-none resize-y font-sans"
+            className="w-full p-4 text-sm text-[#293D2C] placeholder-[#426F49]/50 leading-relaxed focus:outline-none resize-y font-sans bg-transparent"
           />
         ) : (
-          <div
-            className="p-5 min-h-[300px] text-sm text-[#293e2b] leading-relaxed font-sans bg-[#fcfbf9]"
-            dangerouslySetInnerHTML={{ __html: renderPreviewHtml(currentNote.note) }}
-          />
+          <div className="p-5 min-h-[300px] text-sm text-[#293D2C] leading-relaxed font-sans bg-[#FFFDF6]">
+            {!currentNote.note.trim() ? (
+              <div className="py-12 flex flex-col items-center justify-center text-center gap-3">
+                <WeySticker name="work" size={60} />
+                <p className="text-sm font-garden font-bold text-[#293D2C]">
+                  Chưa có nội dung ghi chú nào cho {currentNote.customWeekNumber || `Tuần ${currentNote.weekNumber}`}
+                </p>
+                <p className="text-xs text-[#426F49]">
+                  Chuyển sang chế độ "Soạn thảo" để ghi chú giáo án, công việc và nhắc nhở học sinh.
+                </p>
+              </div>
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: renderPreviewHtml(currentNote.note) }} />
+            )}
+          </div>
         )}
 
         {/* Footer */}

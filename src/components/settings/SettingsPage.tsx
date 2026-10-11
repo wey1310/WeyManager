@@ -15,9 +15,9 @@ import {
   Sparkles,
   Sliders,
   AlertTriangle,
-  Mail,
-  Send,
+  LogIn,
 } from 'lucide-react';
+import { User } from 'firebase/auth';
 import {
   UserProfileData,
   AssetConfig,
@@ -29,27 +29,27 @@ import { GardenButton } from '../common/GardenButton';
 import { GardenCard } from '../common/GardenCard';
 import { GardenInput } from '../common/GardenInput';
 import { GardenModal } from '../common/GardenModal';
-import {
-  downloadBackupJSON,
-  download19ClassesBackupFile,
-  generate19ClassesMailto,
-} from '../../services/exportService';
+import { downloadBackupJSON } from '../../services/exportService';
 import { DEFAULT_POINT_CONVERSION_CONFIG } from '../../services/gradeEngine';
 
 interface SettingsPageProps {
   profile: UserProfileData;
+  currentUser?: User | null;
   onSaveProfile: (updated: UserProfileData) => Promise<void>;
   onCreateBackup: () => Promise<BackupData>;
   onRestoreBackup: (backupData: BackupData) => Promise<void>;
   onLogout: () => void;
+  onGoogleLogin?: () => Promise<void>;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   profile,
+  currentUser,
   onSaveProfile,
   onCreateBackup,
   onRestoreBackup,
   onLogout,
+  onGoogleLogin,
 }) => {
   const [displayName, setDisplayName] = useState(profile.displayName || '');
   const [currentSchoolYear, setCurrentSchoolYear] = useState(profile.currentSchoolYear || '2026–2027');
@@ -121,29 +121,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       setIsExporting(false);
     }
   };
-
-  const handleSend19ClassesToGmail = async () => {
-    try {
-      const data = await onCreateBackup();
-      download19ClassesBackupFile(data);
-
-      const targetEmail = 'hoangbang1310@gmail.com';
-      const { gmailWebUrl, mailtoUrl } = generate19ClassesMailto({
-        targetEmail,
-        classes: data.classes || [],
-        totalStudents: data.students?.length || 840,
-        schoolYear: data.schoolYear || currentSchoolYear,
-      });
-
-      const opened = window.open(gmailWebUrl, '_blank');
-      if (!opened) {
-        window.location.href = mailtoUrl;
-      }
-    } catch {
-      alert('Không thể tạo file báo cáo gửi Gmail.');
-    }
-  };
-
 
   const handleRestoreFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -601,15 +578,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={handleSend19ClassesToGmail}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#ea4335] text-white hover:bg-[#d93025] text-xs font-semibold shadow-xs cursor-pointer transition-colors"
-            title="Soạn thư Gmail gửi báo cáo 19 lớp và tự động tải file backup JSON"
-          >
-            <Send className="w-4 h-4" />
-            <span>Gửi dữ liệu qua Gmail (hoangbang1310@gmail.com)</span>
-          </button>
-
           <GardenButton
             variant="outline"
             icon={<Download className="w-4 h-4" />}
@@ -632,19 +600,36 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       </GardenCard>
 
-      {/* Google Account / Sign out */}
-      <GardenCard className="border-l-4 border-l-rose-400">
+      {/* Google Account / Link Gmail / Sign out */}
+      <GardenCard className="border-l-4 border-l-[#467348]">
         <h3 className="text-base font-bold font-garden text-[#293e2b] mb-1 flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 text-rose-600" />
-          <span>Tài khoản Google & Đăng xuất</span>
+          <ShieldAlert className="w-4 h-4 text-[#467348]" />
+          <span>Tài khoản Google & Lưu trữ đám mây (wey-manager)</span>
         </h3>
-        <p className="text-xs text-[#5d905f] mb-4">
-          Tài khoản kết nối: <strong>{profile.email}</strong>. Dữ liệu được bảo mật và cách ly tuyệt đối theo UID riêng của bạn.
-        </p>
-
-        <GardenButton variant="danger" size="sm" icon={<LogOut className="w-4 h-4" />} onClick={onLogout}>
-          Đăng xuất khỏi tài khoản
-        </GardenButton>
+        {currentUser ? (
+          <div>
+            <p className="text-xs text-[#5d905f] mb-4">
+              Tài khoản đang liên kết: <strong>{currentUser.email || profile.email}</strong>. Dữ liệu được bảo mật và đồng bộ trực tiếp lên Cloud Firestore dự án <strong>wey-manager</strong>.
+            </p>
+            <GardenButton variant="danger" size="sm" icon={<LogOut className="w-4 h-4" />} onClick={onLogout}>
+              Đăng xuất khỏi tài khoản
+            </GardenButton>
+          </div>
+        ) : (
+          <div>
+            <p className="text-xs text-[#5d905f] mb-4">
+              Bạn đang ở chế độ làm việc cục bộ. Hãy liên kết tài khoản Gmail để lưu trữ và đồng bộ toàn bộ 19 lớp học lên cơ sở dữ liệu Firebase (dự án <strong>wey-manager</strong>).
+            </p>
+            <GardenButton
+              variant="primary"
+              size="sm"
+              icon={<LogIn className="w-4 h-4" />}
+              onClick={onGoogleLogin}
+            >
+              Đăng nhập liên kết Gmail
+            </GardenButton>
+          </div>
+        )}
       </GardenCard>
 
       {/* Restore Confirmation Modal */}

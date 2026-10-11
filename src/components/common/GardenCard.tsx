@@ -16,8 +16,8 @@ export const GardenCard: React.FC<GardenCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-xl border border-[#e4d8c9]/80 shadow-[0_1px_3px_rgba(41,62,43,0.04)] p-5 ${
-        hoverable ? 'hover:border-[#a7c8a7] hover:shadow-md transition-all duration-200 cursor-pointer' : ''
+      className={`bg-[#FFFDF6] rounded-2xl border border-[#D5E4D0] shadow-[0_1px_3px_rgba(41,62,43,0.04)] p-5 sm:p-6 ${
+        hoverable ? 'hover:border-[#A8C7A0] hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer' : ''
       } ${className}`}
     >
       {children}

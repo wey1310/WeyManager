@@ -9,12 +9,8 @@ import {
   CheckCircle2,
   Circle,
   Sparkles,
-  BookOpen,
-  Sun,
-  Sunset,
 } from 'lucide-react';
 import { TimetableItem, ClassData } from '../../types';
-import { GardenCard } from '../common/GardenCard';
 import { GardenButton } from '../common/GardenButton';
 
 interface GardenCalendarProps {
@@ -58,90 +54,94 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
   const [currentDate, setCurrentDate] = useState<Date>(today);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
 
-  // Daily notes saved in localStorage
+  // Notes state persisted locally
   const [notes, setNotes] = useState<DayNote[]>(() => {
     try {
-      const saved = localStorage.getItem('vuon_wey_calendar_notes');
-      return saved ? JSON.parse(saved) : [];
+      const saved = localStorage.getItem('wey_garden_calendar_notes');
+      if (saved) return JSON.parse(saved);
     } catch {
-      return [];
+      // Ignore
     }
+    return [
+      {
+        id: '1',
+        dateKey: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+          today.getDate()
+        ).padStart(2, '0')}`,
+        text: 'Kiểm tra sổ điểm 19 lớp trước khi kết thúc tuần',
+        completed: false,
+      },
+    ];
   });
+
   const [newNoteText, setNewNoteText] = useState('');
 
   // Persist notes
   useEffect(() => {
     try {
-      localStorage.setItem('vuon_wey_calendar_notes', JSON.stringify(notes));
-    } catch (e) {
-      console.error('Failed to save calendar notes', e);
+      localStorage.setItem('wey_garden_calendar_notes', JSON.stringify(notes));
+    } catch {
+      // Ignore
     }
   }, [notes]);
 
+  // Year & Month for current calendar view
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  // Selected date key: YYYY-MM-DD
-  const formatDateKey = (d: Date) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-
-  const selectedKey = formatDateKey(selectedDate);
-
-  // First day of month & total days
-  const firstDayOfMonth = new Date(year, month, 1);
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  // In JS getDay(): 0 is Sunday, 1 is Monday ...
-  // We want Monday = 0, Tuesday = 1, ... Sunday = 6
-  let startingDayOfWeek = firstDayOfMonth.getDay() - 1;
-  if (startingDayOfWeek === -1) startingDayOfWeek = 6;
-
-  // Previous month navigation
+  // Navigation handlers
   const handlePrevMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
   };
-
-  // Next month navigation
   const handleNextMonth = () => {
     setCurrentDate(new Date(year, month + 1, 1));
   };
-
-  // Go to today
   const handleGoToday = () => {
-    const now = new Date();
-    setCurrentDate(now);
-    setSelectedDate(now);
+    const t = new Date();
+    setCurrentDate(t);
+    setSelectedDate(t);
   };
 
-  // Get Vietnamese day of week for timetable mapping
-  // Timetable: 2 = Thứ 2 ... 7 = Thứ 7, 8 = Chủ nhật
+  // Calendar math
+  const firstDayOfMonth = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startingDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; // Monday = 0, Sunday = 6
+
+  // Formatter helpers
+  const formatDateKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  const selectedDateKey = formatDateKey(selectedDate);
+
+  // Convert Date to DayOfWeek (2 = Thứ 2 ... 7 = Thứ 7, 8 = Chủ nhật)
   const getDayOfWeekKey = (d: Date) => {
-    const jsDay = d.getDay();
-    return jsDay === 0 ? 8 : jsDay + 1;
+    const day = d.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+    return day === 0 ? 8 : day + 1; // 2 = Mon, 7 = Sat, 8 = Sun
   };
 
   const selectedDayOfWeekKey = getDayOfWeekKey(selectedDate);
+
+  // Get timetable lessons for the selected day
   const selectedDayLessons = timetable
     .filter(t => t.dayOfWeek === selectedDayOfWeekKey)
     .sort((a, b) => {
-      // Sort morning before afternoon, then by period
-      const sessA = a.session === 'afternoon' ? 2 : 1;
-      const sessB = b.session === 'afternoon' ? 2 : 1;
-      if (sessA !== sessB) return sessA - sessB;
+      if (a.session !== b.session) {
+        return a.session === 'morning' ? -1 : 1;
+      }
       return a.period - b.period;
     });
 
-  const selectedDayNotes = notes.filter(n => n.dateKey === selectedKey);
+  // Get notes for selected date
+  const selectedDayNotes = notes.filter(n => n.dateKey === selectedDateKey);
 
+  // Add note
   const handleAddNote = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newNoteText.trim()) return;
+
     const newNote: DayNote = {
-      id: `note_${Date.now()}`,
-      dateKey: selectedKey,
+      id: Date.now().toString(),
+      dateKey: selectedDateKey,
       text: newNoteText.trim(),
       completed: false,
     };
@@ -149,17 +149,18 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
     setNewNoteText('');
   };
 
-  const handleToggleNote = (noteId: string) => {
+  // Toggle note
+  const handleToggleNote = (id: string) => {
     setNotes(prev =>
-      prev.map(n => (n.id === noteId ? { ...n, completed: !n.completed } : n))
+      prev.map(n => (n.id === id ? { ...n, completed: !n.completed } : n))
     );
   };
 
-  const handleDeleteNote = (noteId: string) => {
-    setNotes(prev => prev.filter(n => n.id !== noteId));
+  // Delete note
+  const handleDeleteNote = (id: string) => {
+    setNotes(prev => prev.filter(n => n.id !== id));
   };
 
-  // Formatted date string in Vietnamese
   const formatVietnameseDate = (d: Date) => {
     const days = [
       'Chủ nhật',
@@ -175,33 +176,31 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
 
   // Calendar cells
   const calendarCells = [];
-  // Blank days before month start
   for (let i = 0; i < startingDayOfWeek; i++) {
     calendarCells.push(null);
   }
-  // Days of the month
   for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
     calendarCells.push(new Date(year, month, dayNum));
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#cbdfcb] shadow-xs overflow-hidden">
+    <div className="bg-[#FFFDF6] rounded-2xl border border-[#D5E4D0] shadow-xs overflow-hidden">
       {/* Calendar Header with Spiral Planner Aesthetic */}
-      <div className="bg-gradient-to-r from-[#eef5ee] via-[#f7faf7] to-[#fbf8f0] border-b border-[#cbdfcb] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-[#E8F1E5]/60 border-b border-[#D5E4D0] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#467348] text-white flex items-center justify-center shadow-xs">
+          <div className="w-10 h-10 rounded-xl bg-[#426F49] text-white flex items-center justify-center shadow-xs">
             <CalendarIcon className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-garden text-lg font-bold text-[#293e2b]">
+              <h3 className="font-garden text-lg font-bold text-[#293D2C]">
                 Cuốn Lịch Bàn Của Wey
               </h3>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-white text-[#467348] border border-[#cbdfcb] font-semibold">
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white text-[#426F49] border border-[#D5E4D0] font-semibold">
                 Sổ Lịch Giảng Dạy
               </span>
             </div>
-            <p className="text-xs text-[#5d905f]">
+            <p className="text-xs text-[#293D2C]/75 mt-0.5">
               Theo dõi lịch dạy 2 buổi Sáng - Chiều và ghi chú nhắc việc từng ngày trong tuần
             </p>
           </div>
@@ -211,24 +210,24 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             onClick={handleGoToday}
-            className="px-2.5 py-1.5 rounded-lg border border-[#cbdfcb] bg-white text-[#395c3b] hover:bg-[#eef5ee] text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
+            className="px-2.5 py-1.5 rounded-xl border border-[#D5E4D0] bg-white text-[#293D2C] hover:bg-[#E8F1E5] text-xs font-semibold cursor-pointer shadow-2xs transition-colors"
           >
             Hôm nay
           </button>
-          <div className="flex items-center bg-white border border-[#cbdfcb] rounded-lg p-0.5 shadow-2xs">
+          <div className="flex items-center bg-white border border-[#D5E4D0] rounded-xl p-0.5 shadow-2xs">
             <button
               onClick={handlePrevMonth}
-              className="p-1 rounded text-[#5d905f] hover:bg-[#f4f8f4] hover:text-[#293e2b] cursor-pointer"
+              className="p-1 rounded-lg text-[#426F49] hover:bg-[#E8F1E5] hover:text-[#293D2C] cursor-pointer transition-colors"
               title="Tháng trước"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="px-3 text-xs font-bold text-[#293e2b] font-garden min-w-[110px] text-center">
+            <span className="px-3 text-xs font-bold text-[#293D2C] font-garden min-w-[110px] text-center">
               {VIETNAMESE_MONTHS[month]} · {year}
             </span>
             <button
               onClick={handleNextMonth}
-              className="p-1 rounded text-[#5d905f] hover:bg-[#f4f8f4] hover:text-[#293e2b] cursor-pointer"
+              className="p-1 rounded-lg text-[#426F49] hover:bg-[#E8F1E5] hover:text-[#293D2C] cursor-pointer transition-colors"
               title="Tháng sau"
             >
               <ChevronRight className="w-4 h-4" />
@@ -238,7 +237,7 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
       </div>
 
       {/* Main Body: Grid on Left, Day Details & Tasks on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#cbdfcb]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#D5E4D0]">
         {/* Left Side: Calendar Grid (7 columns) */}
         <div className="lg:col-span-7 p-4 sm:p-5">
           {/* Day of Week Headers */}
@@ -246,8 +245,8 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
             {DAY_LABELS.map((label, idx) => (
               <div
                 key={label}
-                className={`py-1.5 text-xs font-bold font-garden ${
-                  idx >= 5 ? 'text-amber-700' : 'text-[#395c3b]'
+                className={`py-1 text-xs font-bold font-garden ${
+                  idx >= 5 ? 'text-amber-800' : 'text-[#426F49]'
                 }`}
               >
                 {label}
@@ -262,7 +261,7 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
                 return (
                   <div
                     key={`empty_${idx}`}
-                    className="h-14 sm:h-16 rounded-xl bg-[#faf9f6]/40 border border-transparent"
+                    className="h-13 sm:h-15 rounded-xl bg-neutral-50/50 border border-transparent"
                   />
                 );
               }
@@ -283,18 +282,17 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
               // Check if lessons or notes exist for this day
               const cellLessons = timetable.filter(t => t.dayOfWeek === cellDayOfWeek);
               const cellNotes = notes.filter(n => n.dateKey === cellDateKey);
-              const hasItems = cellLessons.length > 0 || cellNotes.length > 0;
 
               return (
                 <button
                   key={cellDateKey}
                   onClick={() => setSelectedDate(dateObj)}
-                  className={`h-14 sm:h-16 rounded-xl p-1.5 flex flex-col justify-between items-center transition-all cursor-pointer text-left relative ${
+                  className={`h-13 sm:h-15 rounded-xl p-1.5 flex flex-col justify-between items-center transition-all cursor-pointer text-left relative ${
                     isSelected
-                      ? 'bg-[#467348] text-white shadow-sm ring-2 ring-[#467348]/30 font-bold'
+                      ? 'bg-[#426F49] text-white shadow-sm ring-2 ring-[#426F49]/30 font-bold'
                       : isToday
-                      ? 'bg-[#eef5ee] border-2 border-[#467348] text-[#293e2b] font-bold'
-                      : 'bg-[#fcfbf9] hover:bg-[#f4f8f4] border border-[#cbdfcb]/70 text-[#293e2b]'
+                      ? 'bg-[#E8F1E5] border-2 border-[#426F49] text-[#293D2C] font-bold'
+                      : 'bg-[#FFFDF6] hover:bg-[#E8F1E5]/60 border border-[#D5E4D0] text-[#293D2C]'
                   }`}
                 >
                   <div className="w-full flex items-center justify-between">
@@ -303,14 +301,14 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
                         isSelected
                           ? 'text-white'
                           : isToday
-                          ? 'text-[#467348]'
-                          : 'text-[#293e2b]'
+                          ? 'text-[#426F49]'
+                          : 'text-[#293D2C]'
                       }`}
                     >
                       {dateObj.getDate()}
                     </span>
                     {isToday && !isSelected && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#467348]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#426F49]" />
                     )}
                   </div>
 
@@ -318,10 +316,10 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
                   <div className="flex items-center gap-1 mt-auto">
                     {cellLessons.length > 0 && (
                       <span
-                        className={`text-[9px] px-1 py-0.2 rounded-md font-semibold ${
+                        className={`text-[9px] px-1 py-0.2 rounded font-semibold ${
                           isSelected
-                            ? 'bg-white/25 text-white'
-                            : 'bg-[#e5f0e5] text-[#395c3b]'
+                            ? 'bg-white/30 text-white'
+                            : 'bg-[#E8F1E5] text-[#426F49]'
                         }`}
                         title={`${cellLessons.length} tiết dạy`}
                       >
@@ -342,14 +340,14 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
             })}
           </div>
 
-          <div className="mt-3 pt-3 border-t border-[#e5f0e5] flex flex-wrap items-center justify-between text-[11px] text-[#5d905f]">
+          <div className="mt-3 pt-3 border-t border-[#D5E4D0] flex flex-wrap items-center justify-between text-[11px] text-[#293D2C]/75 gap-2">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#eef5ee] border border-[#467348] inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#E8F1E5] border border-[#426F49] inline-block" />
                 <span>Hôm nay</span>
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#467348] inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#426F49] inline-block" />
                 <span>Ngày đang chọn</span>
               </span>
               <span className="flex items-center gap-1">
@@ -360,7 +358,7 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
             {onNavigateToTimetable && (
               <button
                 onClick={onNavigateToTimetable}
-                className="font-semibold text-[#467348] hover:underline cursor-pointer"
+                className="font-semibold text-[#426F49] hover:underline cursor-pointer"
               >
                 Xem toàn bộ TKB tuần →
               </button>
@@ -369,14 +367,14 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
         </div>
 
         {/* Right Side: Selected Day Schedule & Teacher Notes */}
-        <div className="lg:col-span-5 p-4 sm:p-5 bg-[#fdfcf9] flex flex-col justify-between">
+        <div className="lg:col-span-5 p-4 sm:p-5 bg-[#FFFDF6] flex flex-col justify-between">
           <div className="space-y-4">
             {/* Selected Date Header */}
-            <div className="border-b border-[#e5f0e5] pb-3">
-              <span className="text-[11px] font-semibold text-[#467348] uppercase tracking-wider block">
+            <div className="border-b border-[#D5E4D0] pb-3">
+              <span className="text-[11px] font-semibold text-[#426F49] uppercase tracking-wider block">
                 LỊCH TRÌNH VÀ CÔNG VIỆC
               </span>
-              <h4 className="text-sm sm:text-base font-bold font-garden text-[#293e2b] mt-0.5">
+              <h4 className="text-sm sm:text-base font-bold font-garden text-[#293D2C] mt-0.5">
                 {formatVietnameseDate(selectedDate)}
               </h4>
             </div>
@@ -384,14 +382,14 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
             {/* Scheduled Teaching Slots for Selected Day */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-[#395c3b] flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#5d905f]" />
+                <span className="text-xs font-bold text-[#293D2C] flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#426F49]" />
                   <span>Tiết dạy trong ngày ({selectedDayLessons.length})</span>
                 </span>
                 {selectedDayLessons.length > 0 && onNavigateToTimetable && (
                   <button
                     onClick={onNavigateToTimetable}
-                    className="text-[11px] text-[#467348] hover:underline cursor-pointer"
+                    className="text-[11px] text-[#426F49] hover:underline cursor-pointer"
                   >
                     Mở TKB
                   </button>
@@ -399,7 +397,7 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
               </div>
 
               {selectedDayLessons.length === 0 ? (
-                <div className="p-3 rounded-xl bg-white border border-[#cbdfcb]/60 text-xs text-[#7eac7f] text-center">
+                <div className="p-3 rounded-xl bg-white border border-[#D5E4D0] text-xs text-[#293D2C]/70 text-center">
                   🌱 Không có tiết dạy được xếp trong ngày này.
                 </div>
               ) : (
@@ -412,27 +410,27 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
                         key={lesson.id}
                         className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs transition-colors ${
                           isMorning
-                            ? 'bg-[#fdfaf0] border-amber-200/70 hover:border-amber-300'
-                            : 'bg-[#fdf6f0] border-orange-200/70 hover:border-orange-300'
+                            ? 'bg-[#FFFDF6] border-amber-200/80 hover:border-amber-300'
+                            : 'bg-[#FFFDF6] border-orange-200/80 hover:border-orange-300'
                         }`}
                       >
                         <div className="flex items-center gap-2">
                           <div
                             className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
                               isMorning
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-orange-100 text-orange-800'
+                                ? 'bg-amber-100 text-amber-900'
+                                : 'bg-orange-100 text-orange-900'
                             }`}
                           >
                             T{lesson.period}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-[#293e2b]">
+                              <span className="font-bold text-[#293D2C]">
                                 Lớp {lesson.className}
                               </span>
                             </div>
-                            <span className="text-[11px] text-[#5d905f] block">
+                            <span className="text-[11px] text-[#293D2C]/75 block">
                               {lesson.subject} · {isMorning ? 'Buổi Sáng' : 'Buổi Chiều'}
                             </span>
                           </div>
@@ -441,7 +439,7 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
                         {targetClass && onSelectClass && (
                           <button
                             onClick={() => onSelectClass(targetClass.id)}
-                            className="text-[11px] font-semibold text-[#467348] hover:underline px-2 py-1 rounded bg-white border border-[#cbdfcb] cursor-pointer shrink-0"
+                            className="text-[11px] font-semibold text-[#426F49] hover:underline px-2 py-1 rounded-lg bg-white border border-[#D5E4D0] cursor-pointer shrink-0"
                           >
                             Vào sổ
                           </button>
@@ -455,8 +453,8 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
 
             {/* Teacher Daily Tasks / Notes */}
             <div>
-              <span className="text-xs font-bold text-[#395c3b] mb-2 block flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#5d905f]" />
+              <span className="text-xs font-bold text-[#293D2C] mb-2 block flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#426F49]" />
                 <span>Ghi chú công việc giáo viên ({selectedDayNotes.length})</span>
               </span>
 
@@ -467,7 +465,7 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
                   placeholder="Ví dụ: Họp tổ chuyên môn, nộp đề kiểm tra..."
                   value={newNoteText}
                   onChange={e => setNewNoteText(e.target.value)}
-                  className="flex-1 text-xs px-3 py-1.5 rounded-lg border border-[#cbdfcb] bg-white text-[#293e2b] focus:outline-none focus:ring-1 focus:ring-[#467348]"
+                  className="flex-1 text-xs px-3 py-1.5 rounded-xl border border-[#D5E4D0] bg-white text-[#293D2C] focus:outline-none focus:ring-1 focus:ring-[#426F49]"
                 />
                 <GardenButton
                   type="submit"
@@ -483,29 +481,29 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
               {/* Notes List */}
               <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                 {selectedDayNotes.length === 0 ? (
-                  <p className="text-[11px] text-[#7eac7f] italic py-1">
+                  <p className="text-[11px] text-[#293D2C]/70 italic py-1">
                     Chưa có việc nào cần nhắc trong ngày {selectedDate.getDate()}/{selectedDate.getMonth() + 1}.
                   </p>
                 ) : (
                   selectedDayNotes.map(note => (
                     <div
                       key={note.id}
-                      className="group flex items-center justify-between p-2 rounded-lg bg-white border border-[#e5f0e5] text-xs hover:border-[#cbdfcb] transition-colors"
+                      className="group flex items-center justify-between p-2 rounded-xl bg-white border border-[#D5E4D0] text-xs hover:border-[#A8C7A0] transition-colors"
                     >
                       <button
                         onClick={() => handleToggleNote(note.id)}
                         className="flex items-center gap-2 text-left flex-1 cursor-pointer"
                       >
                         {note.completed ? (
-                          <CheckCircle2 className="w-4 h-4 text-[#467348] shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-[#426F49] shrink-0" />
                         ) : (
-                          <Circle className="w-4 h-4 text-[#7eac7f] shrink-0" />
+                          <Circle className="w-4 h-4 text-[#A8C7A0] shrink-0" />
                         )}
                         <span
                           className={`${
                             note.completed
                               ? 'line-through text-neutral-400'
-                              : 'text-[#293e2b]'
+                              : 'text-[#293D2C]'
                           }`}
                         >
                           {note.text}
@@ -526,7 +524,7 @@ export const GardenCalendar: React.FC<GardenCalendarProps> = ({
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[#e5f0e5] text-[11px] text-[#7eac7f] flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-[#D5E4D0] text-[11px] text-[#293D2C]/70 flex items-center justify-between">
             <span>Vườn của Wey · Sổ tay công việc giảng dạy</span>
             <span className="font-mono text-[10px]">Tự động lưu thiết bị</span>
           </div>

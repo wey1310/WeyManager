@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Dices, RefreshCw, Sparkles, UserCheck, Check, Flower2, Copy } from 'lucide-react';
 import { StudentData } from '../../types';
 import { GardenModal } from '../common/GardenModal';
-import { GardenButton } from '../common/GardenButton';
 import { useToast } from '../common/GardenToast';
+import { WeySticker } from '../../utils/weyStickers';
+import { StudentAvatar } from '../../utils/zodiacHelper';
 
 interface RandomStudentModalProps {
   isOpen: boolean;
@@ -110,17 +111,18 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
       onClose={onClose}
       title="🎲 Gọi Tên Học Sinh Ngẫu Nhiên"
       subtitle={`Lớp ${className} · Còn lại ${availablePool.length}/${students.length} học sinh`}
+      sticker="happy"
       maxWidth="md"
     >
       <div className="space-y-5">
         {/* Top Options Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-[#f4f8f4] p-3 rounded-xl border border-[#cbdfcb] text-xs">
-          <label className="flex items-center gap-2 cursor-pointer font-medium text-[#293e2b]">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-[#E8F1E5] p-3 rounded-2xl border border-[#D5E4D0] text-xs">
+          <label className="flex items-center gap-2 cursor-pointer font-medium text-[#293D2C]">
             <input
               type="checkbox"
               checked={noRepeatMode}
               onChange={e => setNoRepeatMode(e.target.checked)}
-              className="rounded border-[#cbdfcb] text-[#467348] focus:ring-[#467348]"
+              className="rounded border-[#D5E4D0] text-[#426F49] focus:ring-[#426F49]"
             />
             <span>Random không lặp (loại em đã gọi)</span>
           </label>
@@ -128,17 +130,17 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopyNames}
-              className="text-xs text-[#395c3b] hover:text-[#293e2b] flex items-center gap-1.5 font-semibold cursor-pointer px-2.5 py-1 rounded-lg bg-white border border-[#cbdfcb] hover:bg-[#eef5ee] transition-colors"
+              className="text-xs text-[#293D2C] hover:text-[#426F49] flex items-center gap-1.5 font-semibold cursor-pointer px-2.5 py-1 rounded-xl bg-white border border-[#D5E4D0] hover:bg-[#E8F1E5] transition-colors shadow-2xs"
               title="Sao chép họ & tên học sinh (mỗi bạn 1 dòng) để dán vào Wheel of Names / web quay số"
             >
               {hasCopied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-[#467348]" />
-                  <span className="text-[#467348]">Đã copy tên!</span>
+                  <Check className="w-3.5 h-3.5 text-[#426F49]" />
+                  <span className="text-[#426F49]">Đã copy tên!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3.5 h-3.5 text-[#5d905f]" />
+                  <Copy className="w-3.5 h-3.5 text-[#426F49]" />
                   <span>Copy tên dán web khác</span>
                 </>
               )}
@@ -147,7 +149,7 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
             {pickedStudentIds.size > 0 && (
               <button
                 onClick={handleResetHistory}
-                className="text-xs text-[#5d905f] hover:text-[#293e2b] flex items-center gap-1 font-semibold cursor-pointer underline"
+                className="text-xs text-[#426F49] hover:text-[#293D2C] flex items-center gap-1 font-semibold cursor-pointer underline"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Reset ({pickedStudentIds.size})
@@ -157,63 +159,72 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
         </div>
 
         {/* Gentle Spinning Arena */}
-        <div className="relative overflow-hidden py-10 px-6 rounded-2xl bg-gradient-to-b from-[#f7faf7] to-[#fbf8f0] border border-[#cbdfcb] flex flex-col items-center justify-center text-center min-h-[240px]">
+        <div className="relative overflow-hidden py-10 px-6 rounded-3xl bg-[#FFFDF6] border border-[#D5E4D0] shadow-sm flex flex-col items-center justify-center text-center min-h-[250px]">
           {/* Swirling flower / floating leaf backdrop animation */}
           {isSpinning && (
-            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-30">
-              <Flower2 className="w-48 h-48 text-[#7eac7f] animate-spin duration-700" />
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-25">
+              <Flower2 className="w-48 h-48 text-[#A8C7A0] animate-spin duration-700" />
             </div>
           )}
 
           {isSpinning ? (
             <div className="relative z-10 space-y-3">
-              <div className="w-20 h-20 mx-auto rounded-full bg-white border-2 border-[#467348] flex items-center justify-center text-[#467348] shadow-md animate-bounce">
-                <Flower2 className="w-10 h-10 animate-spin text-[#5d905f]" />
+              <div className="mx-auto flex items-center justify-center animate-bounce">
+                <WeySticker name="thinking" size={72} />
               </div>
-              <div className="text-2xl font-bold font-garden text-[#467348] tracking-tight min-h-[32px]">
-                {cyclingName || 'Đang xoay hoa...'}
+              <div className="text-2xl font-bold font-garden text-[#426F49] tracking-tight min-h-[32px]">
+                {cyclingName || 'Đang gọi tên...'}
               </div>
-              <p className="text-xs text-[#7eac7f]">Gió thổi qua khu vườn matcha...</p>
+              <p className="text-xs text-[#426F49]/80 font-medium">Gió thổi qua khu vườn matcha...</p>
             </div>
           ) : selectedStudent ? (
             <div className="relative z-10 space-y-3 animate-in zoom-in-95 duration-200">
-              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#e5f0e5] border border-[#cbdfcb] text-xs font-semibold text-[#467348]">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F1E5] border border-[#D5E4D0] text-xs font-semibold text-[#426F49]">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>HỌC SINH ĐƯỢC CHỌN</span>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white border-2 border-[#467348] shadow-md min-w-[240px]">
-                <div className="w-14 h-14 mx-auto rounded-full bg-[#eef5ee] text-[#467348] font-bold font-garden text-2xl flex items-center justify-center mb-2">
-                  {selectedStudent.fullName[0]}
+              <div className="p-5 rounded-3xl bg-white border-2 border-[#426F49] shadow-md min-w-[260px] flex flex-col items-center">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <StudentAvatar
+                    dob={selectedStudent.dateOfBirth}
+                    gender={selectedStudent.gender}
+                    zodiac={selectedStudent.zodiac}
+                    avatarUrl={selectedStudent.avatar}
+                    name={selectedStudent.fullName}
+                    size={52}
+                    showBadge
+                  />
+                  <WeySticker name="love" size={48} />
                 </div>
-                <div className="text-2xl font-bold text-[#293e2b] font-garden">
+                <div className="text-2xl font-bold text-[#293D2C] font-garden">
                   {selectedStudent.fullName}
                 </div>
                 {selectedStudent.studentCode && (
-                  <div className="text-xs font-mono text-[#7eac7f] mt-0.5">
+                  <div className="text-xs font-mono text-[#426F49] mt-0.5 font-medium">
                     Mã HS: {selectedStudent.studentCode}
                   </div>
                 )}
                 {selectedStudent.note && (
-                  <div className="text-[11px] text-[#5d905f] mt-1 italic">
+                  <div className="text-[11px] text-[#293D2C]/70 mt-1 italic">
                     {selectedStudent.note}
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="relative z-10 space-y-2 text-[#5d905f]">
-              <div className="w-14 h-14 mx-auto rounded-full bg-[#f4f8f4] border border-[#cbdfcb] flex items-center justify-center text-[#467348]">
-                <Flower2 className="w-7 h-7" />
+            <div className="relative z-10 space-y-2 text-[#293D2C]">
+              <div className="mx-auto flex items-center justify-center mb-1">
+                <WeySticker name={availablePool.length === 0 ? 'sleep' : 'hello'} size={68} />
               </div>
-              <p className="text-sm font-semibold text-[#293e2b]">
+              <p className="text-sm font-bold font-garden text-[#293D2C]">
                 {availablePool.length === 0
                   ? 'Tất cả học sinh trong lớp đều đã được gọi.'
                   : 'Sẵn sàng quay số chọn học sinh'}
               </p>
-              <p className="text-xs text-[#7eac7f]">
+              <p className="text-xs text-[#426F49]">
                 {availablePool.length === 0
-                  ? 'Bấm "Reset danh sách" để bắt đầu lượt gọi mới.'
+                  ? 'Bấm "Reset" để bắt đầu lượt gọi mới.'
                   : `Có ${availablePool.length} học sinh sẵn sàng trong lượt này.`}
               </p>
             </div>
@@ -224,7 +235,7 @@ export const RandomStudentModal: React.FC<RandomStudentModalProps> = ({
             <button
               onClick={handleSpin}
               disabled={isSpinning || availablePool.length === 0}
-              className="px-8 py-3 rounded-xl bg-[#467348] hover:bg-[#395c3b] active:bg-[#304a32] text-white font-bold text-sm shadow-md shadow-[#467348]/20 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer mx-auto"
+              className="px-8 py-3 rounded-2xl bg-[#426F49] hover:bg-[#365c3c] active:bg-[#293D2C] text-white font-bold text-sm shadow-md shadow-[#426F49]/20 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer mx-auto"
             >
               <Dices className="w-5 h-5" />
               <span>{selectedStudent ? '🎲 Quay tiếp học sinh khác' : '🎲 Bắt đầu quay số'}</span>

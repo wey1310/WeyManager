@@ -223,18 +223,23 @@ export const StudentPointTracker: React.FC<StudentPointTrackerProps> = ({
 
       {/* 2. Top Honor Board (Vườn hoa thi đua) */}
       {topStudents.length > 0 && (
-        <div className="bg-white rounded-2xl border border-[#cbdfcb] p-4 sm:p-5 shadow-xs">
+        <div className="bg-[#FFFDF6] rounded-2xl sm:rounded-3xl border border-[#D5E4D0] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-amber-500 text-white">
-                <Award className="w-4 h-4" />
-              </span>
-              <h4 className="font-garden text-sm font-bold text-[#293e2b] uppercase tracking-wide">
-                Vườn Hoa Điểm Tốt · Top Học Sinh Tích Cực Nhất
-              </h4>
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-xl bg-[#E8F1E5] border border-[#D5E4D0]">
+                <WeySticker name="love" size={28} />
+              </div>
+              <div>
+                <h4 className="font-garden text-sm font-bold text-[#293D2C] uppercase tracking-wide">
+                  Vườn Hoa Điểm Tốt · Top Học Sinh Tích Cực Nhất
+                </h4>
+                <p className="text-[11px] text-[#426F49]">
+                  {pointRecords.length} lượt ghi nhận điểm trong lớp
+                </p>
+              </div>
             </div>
-            <span className="text-xs text-[#5d905f]">
-              {pointRecords.length} lượt ghi nhận điểm trong lớp
+            <span className="hidden sm:inline-flex text-xs font-semibold px-2.5 py-1 rounded-full bg-[#E8F1E5] text-[#426F49] border border-[#D5E4D0]">
+              Xuất sắc ⭐
             </span>
           </div>
 

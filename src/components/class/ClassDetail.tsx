@@ -29,6 +29,7 @@ import { GardenWeekNote } from './GardenWeekNote';
 import { RandomStudentModal } from './RandomStudentModal';
 import { StudentPointTracker } from './StudentPointTracker';
 import { GardenButton } from '../common/GardenButton';
+import { WeySticker } from '../../utils/weyStickers';
 
 interface ClassDetailProps {
   classData: ClassData;
@@ -123,37 +124,37 @@ export const ClassDetail: React.FC<ClassDetailProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-200">
       {/* Header Class Banner */}
-      <div className="no-print bg-white rounded-xl sm:rounded-2xl border border-[#cbdfcb] p-3 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+      <div className="no-print bg-[#FFFDF6] rounded-2xl sm:rounded-3xl border border-[#D5E4D0] p-3.5 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <button
             onClick={onBack}
-            className="p-2 rounded-xl border border-[#cbdfcb] bg-[#f4f8f4] text-[#395c3b] hover:bg-[#eef5ee] hover:text-[#293e2b] transition-colors cursor-pointer shrink-0 min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center"
+            className="p-2 rounded-xl border border-[#D5E4D0] bg-white text-[#293D2C] hover:bg-[#E8F1E5] hover:text-[#426F49] transition-colors cursor-pointer shrink-0 min-h-[38px] min-w-[38px] sm:min-h-[40px] sm:min-w-[40px] flex items-center justify-center shadow-2xs"
             title="Quay lại danh sách lớp"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[#467348] text-white flex items-center justify-center font-bold text-base sm:text-xl font-garden shadow-xs shrink-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-[#426F49] text-white flex items-center justify-center font-bold text-base sm:text-xl font-garden shadow-xs shrink-0">
               {classData.name}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <h2 className="text-base sm:text-xl font-bold font-garden text-[#293e2b] truncate">
+                <h2 className="text-base sm:text-xl font-bold font-garden text-[#293D2C] truncate">
                   Lớp {classData.name}
                 </h2>
-                <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-md bg-[#eef5ee] text-[#467348] font-semibold border border-[#cbdfcb] shrink-0">
+                <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-[#E8F1E5] text-[#426F49] font-bold border border-[#D5E4D0] shrink-0">
                   {classData.grade}
                 </span>
               </div>
-              <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-[#5d905f] mt-0.5 flex-wrap">
-                <span className="flex items-center gap-1 font-medium truncate">
+              <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-[#293D2C]/75 mt-0.5 flex-wrap">
+                <span className="flex items-center gap-1 font-semibold text-[#426F49] truncate">
                   <GraduationCap className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> {classData.subject}
                 </span>
                 <span>·</span>
                 <span>{classData.schoolYear}</span>
                 <span>·</span>
-                <span className="font-semibold text-[#467348]">{students.length} HS</span>
+                <span className="font-semibold text-[#426F49]">{students.length} HS</span>
               </div>
             </div>
           </div>
@@ -164,11 +165,11 @@ export const ClassDetail: React.FC<ClassDetailProps> = ({
           <GardenButton
             variant="outline"
             size="sm"
-            icon={hasCopiedNames ? <Check className="w-3.5 h-3.5 text-[#467348]" /> : <Copy className="w-3.5 h-3.5" />}
+            icon={hasCopiedNames ? <Check className="w-3.5 h-3.5 text-[#426F49]" /> : <Copy className="w-3.5 h-3.5" />}
             onClick={handleCopyStudentNames}
             title="Sao chép toàn bộ danh sách họ và tên học sinh (mỗi bạn 1 dòng) để dán vào Wheel of Names / web quay số random"
             className={`text-xs py-1.5 transition-colors ${
-              hasCopiedNames ? 'bg-[#eef5ee] border-[#467348] text-[#293e2b]' : ''
+              hasCopiedNames ? 'bg-[#E8F1E5] border-[#426F49] text-[#293D2C]' : ''
             }`}
           >
             {hasCopiedNames ? 'Đã copy tên!' : 'Copy tên HS'}
@@ -196,29 +197,34 @@ export const ClassDetail: React.FC<ClassDetailProps> = ({
       </div>
 
       {/* Tabs Navigation Frame with solid background */}
-      <div className="no-print bg-white p-1 sm:p-2 rounded-xl sm:rounded-2xl border border-[#cbdfcb] shadow-xs flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar touch-scroll">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap min-h-[36px] sm:min-h-[40px] shrink-0 ${
-                isActive
-                  ? 'bg-[#467348] text-white shadow-xs'
-                  : 'bg-[#f4f8f4] text-[#395c3b] hover:bg-[#eef5ee] border border-[#cbdfcb]'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      <div className="no-print bg-[#FFFDF6] p-1.5 rounded-2xl border border-[#D5E4D0] shadow-xs flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar touch-scroll flex-1">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all cursor-pointer whitespace-nowrap min-h-[36px] sm:min-h-[40px] shrink-0 ${
+                  isActive
+                    ? 'bg-[#426F49] text-white shadow-xs'
+                    : 'bg-white text-[#293D2C] hover:bg-[#E8F1E5] border border-[#D5E4D0]'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="hidden lg:flex items-center pr-2 shrink-0">
+          <WeySticker name={activeTab === 'points' ? 'happy' : activeTab === 'gradebook' ? 'study' : 'hello'} size={34} />
+        </div>
       </div>
 
-      {/* Tab Panels inside solid white card container */}
-      <div className="bg-white rounded-xl sm:rounded-2xl border border-[#cbdfcb] p-2.5 sm:p-5 shadow-xs">
+      {/* Tab Panels inside solid container */}
+      <div className="bg-[#FFFDF6] rounded-2xl sm:rounded-3xl border border-[#D5E4D0] p-2.5 sm:p-5 shadow-xs">
         {activeTab === 'gradebook' && (
           <GradebookTable
             classData={classData}

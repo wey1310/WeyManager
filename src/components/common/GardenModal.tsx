@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { WeySticker, WeyStickerType } from '../../utils/weyStickers';
 
 interface GardenModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   subtitle?: string;
+  sticker?: WeyStickerType;
   children: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl';
 }
@@ -15,6 +17,7 @@ export const GardenModal: React.FC<GardenModalProps> = ({
   onClose,
   title,
   subtitle,
+  sticker,
   children,
   maxWidth = 'md',
 }) => {
@@ -53,17 +56,24 @@ export const GardenModal: React.FC<GardenModalProps> = ({
 
       {/* Modal Dialog */}
       <div
-        className={`relative w-full max-w-[96vw] ${widthClasses[maxWidth]} bg-[#fcfbf9] rounded-xl sm:rounded-2xl border border-[#cbdfcb] shadow-xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] z-10 animate-in fade-in zoom-in-95 duration-150`}
+        className={`relative w-full max-w-[96vw] ${widthClasses[maxWidth]} bg-[#FFFDF6] rounded-2xl sm:rounded-3xl border border-[#D5E4D0] shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh] z-10 animate-in fade-in zoom-in-95 duration-150`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-[#e5f0e5] bg-[#f4f8f4]/80 shrink-0">
-          <div className="pr-2 min-w-0">
-            <h3 className="text-base sm:text-lg font-bold text-[#293e2b] font-garden truncate">{title}</h3>
-            {subtitle && <p className="text-[11px] sm:text-xs text-[#5d905f] mt-0.5 truncate">{subtitle}</p>}
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-[#D5E4D0] bg-[#FFFDF6] shrink-0">
+          <div className="pr-2 min-w-0 flex items-center gap-3">
+            {sticker && (
+              <div className="shrink-0 p-1 bg-[#E8F1E5] rounded-xl border border-[#D5E4D0]">
+                <WeySticker name={sticker} size={36} />
+              </div>
+            )}
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-[#293D2C] font-garden truncate">{title}</h3>
+              {subtitle && <p className="text-[11px] sm:text-xs text-[#426F49] mt-0.5 truncate">{subtitle}</p>}
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#5d905f] hover:text-[#293e2b] hover:bg-[#cbdfcb]/30 transition-colors cursor-pointer shrink-0 min-h-[36px] min-w-[36px] flex items-center justify-center"
+            className="p-1.5 rounded-xl text-[#293D2C]/60 hover:text-[#293D2C] hover:bg-[#E8F1E5] transition-colors cursor-pointer shrink-0 min-h-[36px] min-w-[36px] flex items-center justify-center"
             aria-label="Đóng"
           >
             <X className="w-5 h-5" />
@@ -71,7 +81,7 @@ export const GardenModal: React.FC<GardenModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="p-3.5 sm:p-5 lg:p-6 overflow-y-auto overscroll-contain">{children}</div>
+        <div className="p-3.5 sm:p-5 lg:p-6 overflow-y-auto overscroll-contain bg-[#FFFDF6]">{children}</div>
       </div>
     </div>
   );

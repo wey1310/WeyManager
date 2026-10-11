@@ -53,6 +53,7 @@ import { GardenNavbar } from './components/navbar/GardenNavbar';
 import { BotanicalLeaves } from './components/common/BotanicalLeaves';
 import { LandingPage } from './components/landing/LandingPage';
 import { GardenDashboard } from './components/dashboard/GardenDashboard';
+import { GardenClassesPage } from './components/classes/GardenClassesPage';
 import { CreateClassModal } from './components/dashboard/CreateClassModal';
 import { ClassDetail } from './components/class/ClassDetail';
 import { TeacherTimetable } from './components/schedule/TeacherTimetable';
@@ -84,7 +85,9 @@ function MainApp() {
   const { showToast } = useToast();
 
   // Navigation states
-  const [inGarden, setInGarden] = useState(true);
+  const [inGarden, setInGarden] = useState<boolean>(() => {
+    return sessionStorage.getItem('wey_garden_unlocked') === 'true';
+  });
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'classes' | 'class-detail' | 'timetable' | 'settings'>('dashboard');
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
@@ -521,12 +524,21 @@ function MainApp() {
   if (!inGarden) {
     return (
       <LandingPage
-        onEnterGarden={() => setInGarden(true)}
-        onGoogleLogin={handleGoogleLogin}
+        onEnterGarden={() => {
+          sessionStorage.setItem('wey_garden_unlocked', 'true');
+          setInGarden(true);
+        }}
+        onGoogleLogin={async () => {
+          await handleGoogleLogin();
+          sessionStorage.setItem('wey_garden_unlocked', 'true');
+          setInGarden(true);
+        }}
         externalLinks={profile.externalLinks}
         assets={profile.assets}
         customSavedPassword={profile.customGatePassword}
         hasActiveSession={currentUser !== null || classes.length > 0}
+        currentUser={currentUser}
+        classCount={classes.length}
       />
     );
   }
@@ -564,7 +576,11 @@ function MainApp() {
         }}
         currentUser={currentUser}
         onLogout={handleLogout}
-        onReturnToLanding={() => setInGarden(false)}
+        onGoogleLogin={handleGoogleLogin}
+        onReturnToLanding={() => {
+          sessionStorage.removeItem('wey_garden_unlocked');
+          setInGarden(false);
+        }}
         currentSchoolYear={profile.currentSchoolYear}
         onSelectSchoolYear={year => {
           const updated = { ...profile, currentSchoolYear: year };
@@ -574,46 +590,33 @@ function MainApp() {
 
       {/* Main Content Viewport */}
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-5 lg:px-8 py-3.5 sm:py-6">
-        {/* TAB 1: DASHBOARD */}
+        {/* TAB 1: DASHBOARD (Trang chủ tinh gọn) */}
         {currentTab === 'dashboard' && (
           <GardenDashboard
             classes={classes}
             timetable={timetable}
             currentSchoolYear={profile.currentSchoolYear}
             userId={currentUser?.uid || profile.uid}
-            userEmail={currentUser?.email || profile.email || 'hoangbang1310@gmail.com'}
-            onRefreshData={handleRefreshData}
-            onShowToast={showToast}
+            currentUser={currentUser}
+            onGoogleLogin={handleGoogleLogin}
             onSelectClass={classId => {
               setSelectedClassId(classId);
               setCurrentTab('class-detail');
             }}
-            onCreateClass={() => {
-              setEditingClass(null);
-              setIsCreateClassModalOpen(true);
-            }}
-            onImportClass={() => setIsImportModalOpen(true)}
-            onImport19Classes={handleImport19Classes}
-            onEditClass={cls => {
-              setEditingClass(cls);
-              setIsCreateClassModalOpen(true);
-            }}
-            onDeleteClass={handleDeleteClass}
             onNavigateTab={tab => setCurrentTab(tab as any)}
-            onReturnToLanding={() => setInGarden(false)}
+            onReturnToLanding={() => {
+              sessionStorage.removeItem('wey_garden_unlocked');
+              setInGarden(false);
+            }}
           />
         )}
 
-        {/* TAB 2: CLASSES LIST */}
+        {/* TAB 2: CLASSES LIST (Không gian quản lý lớp học, sinh nhật & luống lớp) */}
         {currentTab === 'classes' && !selectedClassId && (
-          <GardenDashboard
+          <GardenClassesPage
             classes={classes}
-            timetable={timetable}
             currentSchoolYear={profile.currentSchoolYear}
             userId={currentUser?.uid || profile.uid}
-            userEmail={currentUser?.email || profile.email || 'hoangbang1310@gmail.com'}
-            onRefreshData={handleRefreshData}
-            onShowToast={showToast}
             onSelectClass={classId => {
               setSelectedClassId(classId);
               setCurrentTab('class-detail');
@@ -629,8 +632,6 @@ function MainApp() {
               setIsCreateClassModalOpen(true);
             }}
             onDeleteClass={handleDeleteClass}
-            onNavigateTab={tab => setCurrentTab(tab as any)}
-            onReturnToLanding={() => setInGarden(false)}
           />
         )}
 
@@ -681,10 +682,12 @@ function MainApp() {
         {currentTab === 'settings' && (
           <SettingsPage
             profile={profile}
+            currentUser={currentUser}
             onSaveProfile={handleSaveProfile}
             onCreateBackup={handleCreateBackup}
             onRestoreBackup={handleRestoreBackup}
             onLogout={handleLogout}
+            onGoogleLogin={handleGoogleLogin}
           />
         )}
       </main>
