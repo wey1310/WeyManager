@@ -6,9 +6,7 @@ import {
   setDoc, 
   getDocs, 
   deleteDoc, 
-  writeBatch,
-  query,
-  where
+  writeBatch
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { 
@@ -81,6 +79,22 @@ export async function getStudents(userId: string, classId: string): Promise<Stud
     return snap.docs.map(d => d.data() as StudentData);
   } catch (err) {
     console.error('Error getting students:', err);
+    return [];
+  }
+}
+
+// Lấy toàn bộ học sinh của tất cả các lớp thuộc user
+export async function getAllStudentsForClasses(userId: string): Promise<StudentData[]> {
+  try {
+    const classes = await getClasses(userId);
+    let allStudents: StudentData[] = [];
+    for (const cls of classes) {
+      const students = await getStudents(userId, cls.id);
+      allStudents = allStudents.concat(students);
+    }
+    return allStudents;
+  } catch (err) {
+    console.error('Error getting all students for classes:', err);
     return [];
   }
 }
@@ -263,7 +277,7 @@ export async function createFullBackup(userId: string, schoolYear: string): Prom
     classesData[cls.id] = {
       classInfo: cls,
       students,
-    grades,
+      grades,
       weeklyNotes,
       pointRecords,
     };
@@ -314,7 +328,6 @@ export function getLocalData() {
 }
 
 export async function import19ClassesIntoSystem(userId: string): Promise<ClassData[]> {
-  // Tạo danh sách 19 lớp khối 8 mẫu nếu chưa có
   const defaultClasses: ClassData[] = [];
   for (let i = 1; i <= 19; i++) {
     const className = `8A${i}`;
