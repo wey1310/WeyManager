@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // User profile and configuration
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) && isValidId(userId);
+
+      // Classes subcollection
+      match /classes/{classId} {
+        allow read, write: if isOwner(userId) && isValidId(userId) && isValidId(classId);
+
+        // Students subcollection
+        match /students/{studentId} {
+          allow read, write: if isOwner(userId) && isValidId(userId) && isValidId(classId) && isValidId(studentId);
+        }
+
+        // Grades subcollection
+        match /grades/{gradeId} {
+          allow read, write: if isOwner(userId) && isValidId(userId) && isValidId(classId) && isValidId(gradeId);
+        }
+
+        // Weekly notes subcollection
+        match /weeks/{weekId} {
+          allow read, write: if isOwner(userId) && isValidId(userId) && isValidId(classId) && isValidId(weekId);
+        }
+
+        // Student bonus & penalty points subcollection
+        match /points/{pointId} {
+          allow read, write: if isOwner(userId) && isValidId(userId) && isValidId(classId) && isValidId(pointId);
+        }
+      }
+
+      // Teacher Timetables subcollection
+      match /timetables/{timetableId} {
+        allow read, write: if isOwner(userId) && isValidId(userId) && isValidId(timetableId);
+      }
+    }
+  }
+}

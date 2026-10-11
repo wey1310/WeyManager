@@ -1,0 +1,130 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile and garden dashboard configuration",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "currentSchoolYear": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid"]
+    },
+    "Class": {
+      "title": "Class",
+      "description": "Teacher class definition with grade, subject, school year, and flexible grade columns",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "grade": { "type": "string" },
+        "subject": { "type": "string" },
+        "schoolYear": { "type": "string" },
+        "studentCount": { "type": "number" },
+        "note": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "grade", "subject", "schoolYear"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student roster item in a specific class",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "classId": { "type": "string" },
+        "userId": { "type": "string" },
+        "studentCode": { "type": "string" },
+        "fullName": { "type": "string" },
+        "dateOfBirth": { "type": "string" },
+        "gender": { "type": "string" },
+        "note": { "type": "string" },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "classId", "userId", "fullName"]
+    },
+    "GradeRecord": {
+      "title": "GradeRecord",
+      "description": "Scores for a student across HK1, HK2, and Annual calculations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "classId": { "type": "string" },
+        "userId": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "studentId", "classId", "userId"]
+    },
+    "WeeklyNote": {
+      "title": "WeeklyNote",
+      "description": "Weekly plan, reminder, and notes for a class",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "classId": { "type": "string" },
+        "userId": { "type": "string" },
+        "weekNumber": { "type": "number" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "title": { "type": "string" },
+        "note": { "type": "string" },
+        "customWeekNumber": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "classId", "userId", "weekNumber"]
+    },
+    "TimetableItem": {
+      "title": "TimetableItem",
+      "description": "Weekly timetable lesson slot for teacher planner",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "dayOfWeek": { "type": "number" },
+        "period": { "type": "number" },
+        "className": { "type": "string" },
+        "subject": { "type": "string" },
+        "room": { "type": "string" },
+        "note": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "dayOfWeek", "period", "className", "subject"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile settings and configuration"
+    },
+    "/users/{userId}/classes/{classId}": {
+      "schema": "Class",
+      "description": "Teacher classes"
+    },
+    "/users/{userId}/classes/{classId}/students/{studentId}": {
+      "schema": "Student",
+      "description": "Students belonging to a class"
+    },
+    "/users/{userId}/classes/{classId}/grades/{gradeId}": {
+      "schema": "GradeRecord",
+      "description": "Grade records for each student in the class"
+    },
+    "/users/{userId}/classes/{classId}/weeks/{weekId}": {
+      "schema": "WeeklyNote",
+      "description": "Weekly planning notes for the class"
+    },
+    "/users/{userId}/timetables/{timetableId}": {
+      "schema": "TimetableItem",
+      "description": "Teacher timetable schedule entries"
+    }
+  }
+}

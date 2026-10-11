@@ -1,0 +1,6 @@
+{
+  "name": "Vườn Của Wey",
+  "description": "Web quản lý lớp học cá nhân và sổ điểm THCS phong cách Matcha Garden",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
