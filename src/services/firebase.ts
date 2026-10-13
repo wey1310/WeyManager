@@ -6,6 +6,7 @@ import {
   linkWithPopup,
   signOut as fbSignOut,
   onAuthStateChanged,
+  linkWithPopup,
   User,
 } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
@@ -80,6 +81,19 @@ export async function testConnection(): Promise<boolean> {
 
 export async function loginWithGoogle(): Promise<User> {
   const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
+}
+
+export async function linkGoogleAccount(): Promise<User> {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    throw new Error(
+      'Bạn cần đăng nhập tài khoản hiện tại trước khi liên kết Google.'
+    );
+  }
+
+  const result = await linkWithPopup(currentUser, googleProvider);
   return result.user;
 }
 

@@ -4,6 +4,7 @@ import {
   auth,
   onAuthStateChanged,
   loginWithGoogle,
+  linkGoogleAccount,
   logout,
   testConnection,
 } from './services/firebase';
@@ -249,18 +250,7 @@ function MainApp() {
     }
   };
 
-  export async function linkGoogleAccount(): Promise<User> {
-  const currentUser = auth.currentUser;
 
-  if (!currentUser) {
-    throw new Error(
-      'Bạn cần đăng nhập tài khoản hiện tại trước khi liên kết Google.'
-    );
-  }
-
-  const result = await linkWithPopup(currentUser, googleProvider);
-  return result.user;
-}
 
 
 
