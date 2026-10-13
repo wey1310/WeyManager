@@ -218,19 +218,51 @@ function MainApp() {
     getPointRecords(uid, selectedClassId).then(setClassPoints);
   }, [selectedClassId, currentUser?.uid, profile.uid]);
 
+
   // Auth actions
   const handleGoogleLogin = async () => {
     try {
       const user = await loginWithGoogle();
+
       setCurrentUser(user);
       setInGarden(true);
-      showToast(`Xin chào ${user.displayName || user.email}!`, 'success');
+
+      sessionStorage.setItem('wey_garden_unlocked', 'true');
+
+      showToast(
+        `Xin chào ${user.displayName || user.email}!`,
+        'success'
+      );
     } catch (err: any) {
-      console.warn('Google login popup cancelled or error:', err);
-      // Still allow entering garden with local state
-      setInGarden(true);
+      console.error('[GOOGLE AUTH ERROR]', {
+        code: err?.code,
+        message: err?.message,
+        email: auth.currentUser?.email ?? null,
+      });
+
+      showToast(
+        `Đăng nhập Google thất bại: ${
+          err?.code || err?.message || 'Lỗi không xác định'
+        }`,
+        'error'
+      );
     }
   };
+
+  export async function linkGoogleAccount(): Promise<User> {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    throw new Error(
+      'Bạn cần đăng nhập tài khoản hiện tại trước khi liên kết Google.'
+    );
+  }
+
+  const result = await linkWithPopup(currentUser, googleProvider);
+  return result.user;
+}
+
+
 
   const handleLogout = async () => {
     try {
@@ -528,11 +560,7 @@ function MainApp() {
           sessionStorage.setItem('wey_garden_unlocked', 'true');
           setInGarden(true);
         }}
-        onGoogleLogin={async () => {
-          await handleGoogleLogin();
-          sessionStorage.setItem('wey_garden_unlocked', 'true');
-          setInGarden(true);
-        }}
+        onGoogleLogin={handleGoogleLogin}
         externalLinks={profile.externalLinks}
         assets={profile.assets}
         customSavedPassword={profile.customGatePassword}
