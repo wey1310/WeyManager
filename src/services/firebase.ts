@@ -6,9 +6,7 @@ import {
   linkWithPopup,
   signOut as fbSignOut,
   onAuthStateChanged,
-  linkWithPopup,
-  User,
-} from 'firebase/auth';
+} from "firebase/auth";
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
